@@ -81,17 +81,14 @@ const getGuildFromCmd = () => {
 
 /**
  * extract messages from guild setting
- * input: npm start -- --guild=853132782821703751       -> extract messages from only one guild(853132782821703751)
- *        npm start                                     -> extract messages from all guilds
+ * if guildId is specified, extract messages from one guild
  */
-const app = async () => {
-  const customGuildId = getGuildFromCmd();
-
+const app = async (guildId = null) => {
   // fetch all guild settings
   await discordLogin();
   await connectDB();
   // only fetch connected guilds
-  const settings = await fetchSettings(customGuildId);
+  const settings = await fetchSettings(guildId);
   await checkBotStatus(settings);
   promises = settings.map(async (setting) => {
     const { guildId, name } = setting;
