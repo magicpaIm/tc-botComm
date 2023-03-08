@@ -1,4 +1,4 @@
-const { getRange } = require("../database/dbservice.js");
+const { getRange, updateChannel, connectDB } = require("../database/dbservice.js");
 
 /**
  * @dev fetch messages by filter
@@ -121,7 +121,31 @@ const sendDMtoUser = async (client, userId, message) => {
     console.log("Can't DM to user", e);
   }
 };
+
+
+/**
+ * @dev send dm to user
+ * @param client discord client
+ * @param guildId id of guild
+ */
+const updateChannelInfo = async (client, guildId) => {
+  try {
+    const guild = client.guilds.cache.get(guildId);
+    if (guild) {
+      const channels = guild.channels.cache.filter((channel) => channel.type === "GUILD_TEXT");
+
+      channels.map(async (channel) => {
+        const {id, name} = channel;
+        await updateChannel(guildId, id, name);
+      });
+    }
+  } catch (e) {
+    console.log("Error in updating channel info", e);
+  }
+};
+
 module.exports = {
   fetchMessages,
   sendDMtoUser,
+  updateChannelInfo
 };

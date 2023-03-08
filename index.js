@@ -6,7 +6,7 @@ const {
   connectDB,
   updateGuild,
 } = require("./database/dbservice.js");
-const { fetchMessages, sendDMtoUser } = require("./action/export.js");
+const { fetchMessages, updateChannelInfo } = require("./action/export.js");
 
 const { Client, Intents } = require("discord.js");
 require("dotenv").config();
@@ -81,17 +81,19 @@ const getGuildFromCmd = () => {
 
 /**
  * extract messages from guild setting
- * if guildid is specified, extract messages from one guild
+ * if guildId is specified, extract messages from one guild
  */
-const app = async (guidlId = null) => {
+const app = async (guildId = null) => {
   // fetch all guild settings
   await discordLogin();
   await connectDB();
   // only fetch connected guilds
-  const settings = await fetchSettings(guidlId);
+
+  const settings = await fetchSettings(guildId);
   await checkBotStatus(settings);
   promises = settings.map(async (setting) => {
     const { guildId, name } = setting;
+    await updateChannelInfo(client, guildId);
     await toggleExtraction(setting, true);
     // fetch missed messages from discord
     const messages = await fetch(setting);

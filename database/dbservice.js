@@ -1,4 +1,4 @@
-const { databaseService, rawInfoService, guildService } = require("tc-dbcomm");
+const { databaseService, rawInfoService, guildService, channelsService } = require("tc-dbcomm");
 const mongoose = require("mongoose");
 // get database address
 const getDB = () => {
@@ -75,6 +75,7 @@ const messageToRawinfo = async (m) => {
     reply = `${m.mentions?.repliedUser?.username}#${m.mentions?.repliedUser?.discriminator}`;
   }
   m.content = m.content.replace(new RegExp(",", "g"), " ");
+  const isThread = m.channel.type !== "GUILD_TEXT";
   const data = {
     type: m.type,
     datetime: convertDateToYYYYMMDD(new Date(m.createdTimestamp)),
@@ -84,10 +85,10 @@ const messageToRawinfo = async (m) => {
     role_mentions: roles_mentions ? roles_mentions.join(",") : "",
     reactions: reactions,
     replied_user: reply,
-    channelId: m.channelId,
+    channelId: isThread ? m.channel.parentId : m.channel.id,
     messageId: m.id,
-    channel: m.channel.name,
-    thread: m.channel.type !== "GUILD_TEXT",
+    threadId: isThread ? m.channel.id : "None",
+    thread: isThread ? m.channel.name: "None",
   };
   return data;
 };
@@ -127,6 +128,14 @@ const getRange = async (guildID, channelID) => {
   return range;
 };
 
+const updateChannel = async (guildId, channelId, channel) => {
+  const database = getDB();
+  const connection = databaseService.connectionFactory(guildId, database);
+  const data = await channelsService.updateChannel(connection, channelId, channel);
+  await connection.close();
+  return data;
+}
+
 const updateGuild = guildService.updateGuildByGuildId;
 module.exports = {
   insertMessages,
@@ -134,4 +143,5 @@ module.exports = {
   getRange,
   connectDB,
   updateGuild,
+  updateChannel
 };
