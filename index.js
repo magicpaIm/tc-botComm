@@ -2,7 +2,6 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   fetchSettings,
-  getRange,
   insertMessages,
   connectDB,
   updateGuild,
@@ -82,17 +81,14 @@ const getGuildFromCmd = () => {
 
 /**
  * extract messages from guild setting
- * input: npm start -- --guild=853132782821703751       -> extract messages from only one guild(853132782821703751)
- *        npm start                                     -> extract messages from all guilds
+ * if guildid is specified, extract messages from one guild
  */
-const app = async () => {
-  const customGuildId = getGuildFromCmd();
-
+const app = async (guidlId = null) => {
   // fetch all guild settings
   await discordLogin();
   await connectDB();
   // only fetch connected guilds
-  const settings = await fetchSettings(customGuildId);
+  const settings = await fetchSettings(guidlId);
   await checkBotStatus(settings);
   promises = settings.map(async (setting) => {
     const { guildId, name } = setting;
@@ -112,7 +108,8 @@ const app = async () => {
     }
   });
   await Promise.all(promises);
-  process.exit(0);
 };
 
-app();
+module.exports = {
+  app
+}
